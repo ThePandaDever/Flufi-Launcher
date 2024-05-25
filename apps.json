@@ -25,7 +25,7 @@
           },
           {
             "name": "epicworld.world",
-            "data": "{\"ENT\":[{\"type\":\"chest-wood\",\"x\":0,\"y\":0},{\"type\":\"chest-wood\",\"x\":1,\"y\":0},{\"type\":\"chest-wood\",\"x\":-2,\"y\":-2}],\"PLAYER\":{\"Pnada\":{\"x\":1,\"y\":0}}}"
+            "data": "{\"ENT\":[{\"type\":\"chest-wood\",\"x\":0,\"y\":0},{\"type\":\"chest-wood\",\"x\":1,\"y\":0},{\"type\":\"chest-wood\",\"x\":-2,\"y\":-2}]}"
           }
         ]
       }
