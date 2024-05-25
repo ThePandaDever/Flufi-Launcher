@@ -1,0 +1,290 @@
+
+icn_factorio = "c #bf6d24 w 4 cutcircle 0 0 5.5 0 180 w 1 line -2 7 -1.5 9 cont 1.5 9 cont 2 7 line -2 -7 -1.5 -9 cont 1.5 -9 cont 2 -7 line 7 -2 9 -1.5 cont 9 1.5 cont 7 2 line -7 -2 -9 -1.5 cont -9 1.5 cont -7 2 line -5.5 3 -7.5 6 cont -6 7.5 cont -3 5.5 line 5.5 3 7.5 6 cont 6 7.5 cont 3 5.5 line -5.5 -3 -7.5 -6 cont -6 -7.5 cont -3 -5.5 line 5.5 -3 7.5 -6 cont 6 -7.5 cont 3 -5.5 w 3 dot 0 8 dot 8 0 dot 0 -8 dot -8 0 dot -6 -6 dot 6 -6 dot -6 6 dot 6 6"
+icn_world = "w 5 c #70d2ff square 0 0 10 10 square 0 0 6 6 square 0 0 2 2 c #2ab500 square 0 -8 10 2 line -8 -8 8 -8 w 10 dot -6 -6 w 5 line 1 -6 4 -1 cont 7 1 cont 10 1 cont 10 -5 dot 6 -2"
+
+file "install_type" "world" icn_world "World"
+file "install_type" "flufimod" icn_factorio "Flufi Mod"
+
+icn_ent_chest-wood = "c #bd8b42 w 4 square 0 0 10 10 w 23 dot 0 0 c #805e2d w 2.5 square 0 0 11 11 line -10 6 10 6 line -10 0 10 0 line -10 -6 10 -6 "
+
+cam_x = 0
+cam_y = 0
+cam_zoom = 1
+gen_scale = 1
+
+player_x = 0
+player_y = 0
+
+out = ""
+enabledmods = []
+
+sprite_size = 25
+
+logs = ["launching"]
+
+entities = []
+players = {}
+
+ent_defs = {}
+
+comblogs = []
+comb_log = false
+
+def "print" "text"
+  if comb_log (
+    comblogs.append(text)
+  ) else (
+    log newline ++ text ++ newline
+    logs.append(text)
+  )
+endef
+
+def "get_def" "entity"
+  out = ent_defs.[entity]
+endef
+
+def "load_mod" "mod"
+  //logging 
+  comb_log = true
+  print "loading mod" + mod + "{"
+  save mod ++ ".flufimod" "get"
+  load_mod_code save_data
+  
+  //logging end
+  print "}"
+  comb_log = false
+  print comblogs.join(newline)
+endef
+
+def "load_mod_code" "mod"
+  print "  " ++ "loading entities ["
+  each "enti" "ent" mod.["entities"].getall("keys") (
+    print "    " ++ ent
+    ent_data = mod.["entities"].[ent]
+    ent_defs.[ent] = ent_data
+  )
+  print "  " ++ "]"
+endef
+
+def "get_mods"
+  save "mods.plist" "get"
+  out = save_data.split(";")
+  len = out.len
+  out.delete(len)
+  save "enabledmods.plist" "get"
+  out_enabledmods = save_data.split(";")
+  len = out_enabledmods.len
+  out_enabledmods.delete(len)
+endef
+
+def "insquare" "x,y,l,t,r,b"
+  out = false
+  if x > l (
+    if x < r (
+      if y > b (
+        if y < t (
+          out = true
+        )
+      )
+    )
+  )
+endef
+
+def "get_blocked" "x,y"
+  Fout = false
+  each "enti" "ent" entities (
+    get_def ent.["type"]
+    bb = out.["bb"]
+    ex = ent.["x"]
+    ey = ent.["y"]
+    l = bb.[1] + ex
+    t = bb.[2] + ey
+    r = bb.[3] + ex
+    b = bb.[4] + ey
+    insquare x y l t r b
+    if out (
+      Fout = true
+    )
+  )
+  out = Fout
+endef
+
+def "gizmo" "x,y"
+  game_goto x y
+  c #fff
+  pen "size" 5
+  pen "down"
+  pen "up"
+endef
+
+def "load_world" "world"
+  for "sectioni" world.getall("keys").len (
+    key = world.getall("keys").[sectioni]
+    value = world.getall("values").[sectioni]
+    if key == "ENT" (
+      entities = value
+    )
+    if key == "PLAYER" (
+      loc_player = value.[username]
+      players = value
+      player_x = loc_player.["x"]
+      player_y = loc_player.["y"]
+      cam_x = player_x
+      cam_y = player_y
+    )
+  )
+endef
+
+def "get_worlds"
+  save "worlds.plist" "get"
+  out = save_data.split(";")
+endef
+
+def "get_world" "world"
+  save world ++ ".world" "get"
+  out = save_data
+endef
+
+def "game_goto" "x,y"
+  goto x - cam_x * sprite_size * gen_scale y - cam_y * sprite_size * gen_scale
+endef
+
+world_x = 0
+world_y = 0
+def "screen_game" "x,y"
+  world_x = x / gen_scale / sprite_size + cam_x
+  world_y = y / gen_scale / sprite_size + cam_y
+endef
+
+def "winbuttons"
+  window "show"
+  direction 90
+  loc -2 2 -45 -20
+  square 70 17 10 : c#444
+  change_x 25
+  icon "close" 0.6 : c#fff hover_size#1.1
+  if clicked (
+    //save logname "set" logs.join(newline)
+    window "stop"
+  )
+  icon "down" 0.6 : chx#-25 hover_size#1.1
+  if clicked (
+    window "minimise"
+  )
+  icon "maximise" 0.6 : chx#-25 hover_size#1.1
+  if clicked (
+    window "maximise"
+  )
+endef
+
+def "drawbox" "bx,by,l,t,r,b"
+  game_goto bx + l by + b
+  icon "w 1 line 0 5 0 0 cont 5 0" gen_scale
+  game_goto bx + r by + b
+  icon "w 1 line 0 5 0 0 cont -5 0" gen_scale
+  game_goto bx + l by + t
+  icon "w 1 line 0 -5 0 0 cont 5 0" gen_scale
+  game_goto bx + r by + t
+  icon "w 1 line 0 -5 0 0 cont -5 0" gen_scale
+endef
+
+//setup
+seticon icn_factorio
+minimised_text = "Epic"
+
+//permission "request" "save admin"
+
+save "factorio@flufi" "set_directory"
+
+logname = timestamp.timestamp("convert-full") ++ ".log"
+
+window "dimensions" 1000 600
+
+get_worlds
+get_world out.[1]
+load_world out
+
+get_mods
+each "modi" "mod" out_enabledmods (
+  load_mod mod
+)
+
+mainloop:
+  //update camera
+  cam_x += player_x - cam_x * delta_time * 10
+  cam_y += player_y - cam_y * delta_time * 10
+  
+  //topbar
+  loc 2 2 20 -20
+  icon icn_factorio 1.5
+  change_x 25
+  c #fff
+  text "Factorio" 12
+  
+  //entities
+  each "enti" "ent" entities (
+    type = ent.["type"]
+    get_def type
+    ent_def = out
+    
+    if true "drawicn = icn_" ++ ent_def.["texture"]
+    
+    game_goto ent.["x"] ent.["y"]
+    icon drawicn gen_scale
+    
+    ent_bb = ent_def.["bb"]
+    c #fff
+    w = ent_bb.[3] - ent_bb.[1] * gen_scale * sprite_size
+    h = ent_bb.[4] - ent_bb.[2] * gen_scale * sprite_size
+    game_goto ent.["x"] ent.["y"]
+    square w h 1 0 1
+    istouching = mouse_touching
+    log istouching
+    if istouching (
+      c #fcba03
+      drawbox ent.["x"] ent.["y"] ent_bb.[1] ent_bb.[2] ent_bb.[3] ent_bb.[4]
+    )
+  )
+  
+  //automatic scaling
+  if window_width > window_height (
+    gen_scale = window_height * .005 * cam_zoom
+  ) else (
+    gen_scale = window_width * .005 * cam_zoom
+  )
+  
+  //zooming
+  scroll_amt = delta_time * 2 + 1
+  if scroll_velocity > 0 (
+    cam_zoom = cam_zoom * scroll_amt
+  ) else (
+    if scroll_velocity < 0 (
+      cam_zoom = cam_zoom / scroll_amt
+    )
+  )
+  
+  //movement
+  move_x = 0
+  move_y = 0
+  if "w".pressed (
+    move_y += delta_time * 5
+  )
+  if "s".pressed (
+    move_y -= delta_time * 5
+  )
+  if "d".pressed (
+    move_x += delta_time * 5
+  )
+  if "a".pressed (
+    move_x -= delta_time * 5
+  )
+  player_x = player_x + move_x
+  player_y = player_y + move_y
+  
+  //draw player (temp)
+  game_goto player_x player_y
+  pen "size" gen_scale * 5
+  c #fff
+  pen "down"
+  pen "up"
+winbuttons
