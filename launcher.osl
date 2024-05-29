@@ -1,0 +1,356 @@
+import "Window_Tools"
+
+icon_launcher = "w 4 c #ae00ff square 0 -6 2 2 w 2 c #e8b8ff line -5 4 -3 -1 line 0 4 0 -1 line 5 4 3 -1 w 2 c #7000a3 square 0 -6 4 4 w 4 c #ae00ff dot -5 4 dot 0 4 dot 5 4"
+icon_home = "w 3 line 8 0 5 0 cont 5 -8 cont -5 -8 cont -5 0 cont -8 0 cont 0 8 cont 8 0 w 10 line 0 -3 0 3"
+seticon icon_launcher
+
+permission "request" "save admin"
+permission "request" "notifications"
+
+window "dimensions" 1000 600
+minimised_text = "Epic"
+
+url_back = "https://raw.githubusercontent.com/ThePandaDever/Flufi-Launcher/main/"
+appsurl = url_back ++ "apps.json"
+apps = appsurl.get().JsonClean()
+bannerurl = url_back ++ "banner.json"
+bannerjson = bannerurl.get().JsonClean()
+
+saved = []
+
+save "launcher@flufi" "set_directory"
+save "settings.cfg" "exists"
+if save_data == false (
+  save "settings.cfg" "set" {"saved":[]}
+)
+save "settings.cfg" "get"
+saved = save_data.["saved"]
+
+def "winbuttons"
+  window "show"
+  direction 90
+  loc -2 2 -45 -19
+  square 70 17 10 : c#444
+  change_x 25
+  icon "close" 0.6 : c#fff hover_size#1.1
+  if clicked (
+    save "settings.cfg" "get"
+    data = save_data
+    data.["saved"] = saved
+    save "settings.cfg" "set" data
+    window "stop"
+  )
+  icon "down" 0.6 : chx#-25 hover_size#1.1
+  if clicked (
+    window "minimise"
+  )
+  icon "maximise" 0.6 : chx#-25 hover_size#1.1
+  if clicked (
+    window "maximise"
+  )
+endef
+
+def "app_panel" "dx,cy,text"
+  win_width = window_width
+  win_height = window_height - 35
+  x = win_width * .5 / dx
+  y = win_height * .5 - 17.5 - 100 - cy
+  goto x y + scroll_y
+  w = win_width * .5 - 30
+  h = 200 - 30
+  square w h 10 : c#444
+  square w - 10 h - 40 10 : c#222 chy#15
+  goto w * -.5 + x + 2 h * -.5 + y + 12 + scroll_y
+  text text 10 : c#fff
+endef
+
+def "screen_goto" "dx,y"
+  win_width = window_width
+  win_height = window_height - 35
+  goto win_width * .5 / dx win_height * .5 - 17.5 - 100 - y + scroll_y
+endef
+
+scroll_y = 0
+
+def "topbar"
+  c #0d0d0d
+  loc infinity 2 0 -20
+  square window_width 40
+  loc 2 2 15 -17
+  icon icon_launcher 1.5
+  c #fff
+  loc 2 2 35 -20
+  text "Flufi launcher" 12
+  
+  loc -2 2 -120 -20
+  
+  square 20 20 10 : c#777
+  icon icon_home 1.1 : hover_size#1.1 c#fff tooltip#"Home"
+  if mouse_touching (
+    cursor "pointer"
+    if click (
+      menu = "home"
+    )
+  )
+  
+  change_x -35
+  
+  square 20 20 10 : c#777
+  
+  isvalid = false
+  
+  icon "paste" .9 : hover_size#1.1 c#fff tooltip#"Paste in shared app"
+  if mouse_touching (
+    cursor "pointer"
+    if click (
+      text = clipboard
+      l = text.len - 26
+      text = text.right(l)
+      l = text.len - 2
+      text = text.left(l)
+      menu = "app"
+      menu_app = text
+    )
+  )
+endef
+
+method "value.putnewline(every)"
+  count = 0
+  loop value.len // every (
+    count ++
+    index = count * every
+    value.insert(index,newline)
+  )
+  return value
+endmethod
+
+
+out = 0
+
+method "name.getappi()"
+  return apps.["apps"].getall("name").index(name)
+endmethod
+
+method "text.wrap(limit)"
+  outtext = ""
+  each "chari" "char" text.split("") (
+    outtext = outtext ++ char
+    temp = chari / limit
+    if temp == temp.round (
+      outtext = outtext + newline
+    )
+  )
+  return outtext
+endmethod
+
+// explain what the func does
+// in my array of apps, it gets the index of the app by the name
+// so like "factorio" would return 1
+
+window "set_dragbox" [[2,2,0,0],[-2,2,-180,-40]]
+
+menu = "home"
+menu_app = ""
+
+lastmousedown = false
+click = false
+
+mainloop:
+  pen "size" 5
+  panel_y = 0
+  
+  click = lastmousedown and mouse_down
+  lastmousedown = mouse_down.not
+  
+  if menu == "app" (
+    appi = menu_app.getappi()
+    appname = apps.["apps"].[appi].["name"]
+    
+    panel_y += 30
+    
+    screen_goto 0 0
+    c #aaa
+    
+    //side bar
+    set_x win_width * .5
+    change_x win_width * -.125 - 12.5
+    set_y window_height - win_height * -.5 - 20
+    square win_width * .25 - 5 win_height - 69 10 : c#444
+    
+    //preview
+    set_x win_width * -.5
+    change_x win_width * .375 - 12
+    main_x = x_position
+    set_y window_height * -.5 + win_height - 25 - 125 + scroll_y - panel_y
+    square win_width * .75 - 45 250 10 : c#444
+    panel_y += 250
+    
+    offsetx = win_width * -.75 * .5 + 30
+    text apps.["apps"].[appi].["path"].join(" -> ") 7.5 : chy#105 c#fff chx#offsetx chy#10
+    
+    set_x main_x
+    text apps.["apps"].[appi].["disp"] 15 : c#fff chx#offsetx chy#-25
+    
+    set_x main_x
+    set_y window_height * -.5 + win_height - 197.5 + scroll_y - panel_y
+    c #fff
+    w = win_width * .75 - 45
+    square w 300 10 : c#444
+    panel_y += 300
+    sections = apps.["apps"].[appi].["desc"]
+    sectiony = 0
+    wrapamt = w * .1
+    wrapamt = wrapamt.round - 1
+    x = x_position - 5
+    y = y_position
+    each "sectioni" "section" sections (
+      goto x y
+      offsety = sectiony * -6
+      sec_text = section
+      c #fff
+      if section.istype("object") (
+        if section.contains("link") (
+          sec_text = section.["disp"]
+          c #2491ff
+        )
+      )
+      text sec_text.wrap(wrapamt) 10 : chx#offsetx chy#offsety chy#140
+      sectiony += section.count(newline) + 1 * 10
+    )
+    
+    panel_y += 62.5
+    //top bar
+    loc -2 2 -65 -62
+    square 17 17 10 : c#222
+    icon "copy" .8 : hover_size#1.1 c#fff tooltip#"Share app"
+    if mouse_touching (
+      cursor "pointer"
+      if click (
+        inv = "## Flufi launcher app:" ++ newline ++ "**" ++ appname ++ "**"
+        clipboard "set" inv
+      )
+    )
+    
+    loc -2 2 -30 -62
+    square 17 17 10 : c#222
+    issaved = saved.contains(appname)
+    iconname = "bookmark"
+    if saved.contains(appname) (
+      iconname = "bookmark-full"
+    )
+    icon iconname .8 : hover_size#1.1 c#fff tooltip#"Save"
+    if mouse_touching (
+      cursor "pointer"
+      if click (
+        if saved.contains(appname) (
+          saved.delete(saved.index(appaname))
+        ) else (
+          saved.append(appname)
+        )
+      )
+    )
+  )
+  if menu == "home" (
+    panel_y = 240
+    
+    screen_goto infinity 10
+    c #fff
+    square window_width bannerjson.["backheight"]
+    image url_back ++ "banner_back.png"
+    
+    if bannerjson.["type"] == "update" (
+      c #222
+      screen_goto infinity bannerjson.["offsetheight"]
+      square window_width 30
+      change_x window_width * .5 - 10
+      username_l = username.toLower()
+      txt = bannerjson.["text"].replace("[user]",username_l)
+      change_x txt.len * -12
+      c #fff
+      text txt 12
+    )
+    
+    appi = 0
+    each "tempappi" "appjson" apps.destr.["apps"] (
+      appi ++
+      code = appjson.["files"].["main"]
+      codeurl = url_back ++ code ++ ".osl"
+      
+      dx = -2
+      temp = appi + 1 / 2
+      if appi / 2 == temp.round (
+        dx = 2
+      )
+    
+      app_panel dx panel_y appjson.["disp"]
+      screen_goto dx panel_y - 30
+      icon appjson.["banner"] 2.5
+      
+      screen_goto dx panel_y
+      change_x w * .5 - 15
+      change_y h * -.5 + 12
+      
+      square 17 17 10 : c#222
+      icon "open" .8 : hover_size#1.1 c#fff tooltip#"View app"
+      
+      if mouse_touching (
+        cursor "pointer"
+        if click (
+          menu = "app"
+          menu_app = appjson.["name"]
+        )
+      )
+      
+      change_x -35
+      
+      square 17 17 10 : c#222
+      icon "copy" .8 : hover_size#1.1 c#fff tooltip#"Share app"
+      
+      if mouse_touching (
+        cursor "pointer"
+        if click (
+          inv = "## Flufi launcher app:" ++ newline ++ "**" ++ appjson.["name"] ++ "**"
+          clipboard "set" inv.destr
+        )
+      )
+      
+      change_x -35
+      
+      square 17 17 10 : c#222
+      iconname = "bookmark"
+      name = appjson.["name"]
+      if saved.contains(name) (
+        iconname = "bookmark-full"
+      )
+      icon iconname .8 : hover_size#1.1 c#fff tooltip#"Save"
+      
+      if mouse_touching (
+        if click (
+          if saved.contains(name) (
+            saved.delete(saved.index(name))
+          ) else (
+            saved.append(name)
+          )
+        )
+      )
+      
+      if appi + 1 / 2 == temp.round (
+        panel_y += 200
+      )
+    )
+  )
+  
+  topbar
+  
+  //scrolling
+  scroll_y += scroll_velocity * -.1
+  max = panel_y
+  win_max = window_height - 35
+  max = max - win_max
+  if scroll_y > max (
+    scroll_y = max
+  )
+  if scroll_y < 0 (
+    scroll_y = 0
+  )
+winbuttons
