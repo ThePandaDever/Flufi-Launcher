@@ -43,17 +43,6 @@
         "files": {
             "main":"launcher"
         }
-    },
-    {
-        "name":"launcher",
-        "disp":"Flufi Launcher",
-        "desc":["Yep this is flufi launcher in flufi launcher :D"],
-        "path":["Misc"],
-        "status":"WIP",
-        "banner":"w 4 c #ae00ff square 0 -6 2 2 w 2 c #e8b8ff line -5 4 -3 -1 line 0 4 0 -1 line 5 4 3 -1 w 2 c #7000a3 square 0 -6 4 4 w 4 c #ae00ff dot -5 4 dot 0 4 dot 5 4",
-        "files": {
-            "main":"launcher"
-        }
     }
   ]
 }
