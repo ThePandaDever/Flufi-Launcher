@@ -1,6 +1,6 @@
 {
   "type":"update",
-  "text":"Welcome to flufi launcher!",
+  "text":"Welcome to flufi launcher [user]!",
   "offsetheight":115,
   "backheight":180
 }
