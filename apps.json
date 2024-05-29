@@ -31,7 +31,13 @@
             "data": "{\"ENT\":[{\"type\":\"chest-wood\",\"x\":0,\"y\":0},{\"type\":\"chest-wood\",\"x\":1,\"y\":0},{\"type\":\"chest-wood\",\"x\":-2,\"y\":-2}]}"
           }
         ]
-      }
+      },
+      "screenshots":[
+        ["https://raw.githubusercontent.com/ThePandaDever/Flufi-Launcher/main/factorio1.png",
+        1025,
+        630
+        ]
+      ]
     },
     {
         "name":"launcher",
