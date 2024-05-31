@@ -2,7 +2,8 @@ import "Window_Tools"
 
 icon_launcher = "w 4 c #ae00ff square 0 -6 2 2 w 2 c #e8b8ff line -5 4 -3 -1 line 0 4 0 -1 line 5 4 3 -1 w 2 c #7000a3 square 0 -6 4 4 w 4 c #ae00ff dot -5 4 dot 0 4 dot 5 4"
 icon_home = "w 3 line 8 0 5 0 cont 5 -8 cont -5 -8 cont -5 0 cont -8 0 cont 0 8 cont 8 0 w 10 line 0 -3 0 3"
-seticon icon_launcher
+file "open" my_uuid
+file "set" 11 icon_launcher
 
 permission "request" "save admin"
 permission "request" "notifications"
@@ -155,11 +156,17 @@ menu_app = ""
 lastmousedown = false
 click = false
 
+ss_scrollamt = 0
+ss_scrollcur = 0
+
+viewing_url = ""
+
 mainloop:
   pen "size" 5
   panel_y = 0
   
-  click = lastmousedown and mouse_down
+  caninteract = viewing_url == ""
+  click = lastmousedown and mouse_down and caninteract
   lastmousedown = mouse_down.not
   
   if menu == "app" (
@@ -182,8 +189,61 @@ mainloop:
     change_x win_width * .375 - 12
     main_x = x_position
     set_y window_height * -.5 + win_height - 25 - 125 + scroll_y - panel_y
-    square win_width * .75 - 45 250 10 : c#444
+    w = win_width * .75 - 45
+    square w 250 10 : c#444
     panel_y += 250
+    
+    change_y -115
+    
+    if ss_scrollamt > 0 (
+      square w - 20 10 10 : c#777
+      slider w - 20 10 screenshots
+      sliderval = slider_screenshots
+      ss_scrollcur = sliderval * ss_scrollamt
+    ) else (
+      ss_scrollcur = 0
+      slider_screenshots = 0
+    )
+    
+    change_y 115
+    sv_scroll_y = scroll_y
+    sx = x_position
+    sy = y_position
+    change_y 15
+    frame_w = w - 20 * .5 + 10
+    frame x_position - frame_w y_position + 65 x_position + frame_w y_position - 120 165
+    set_y y
+    change_x ss_scrollcur * -1
+    change_x w * -.5
+    total_x = 0
+    each "screenshoti" "screenshot" apps.["apps"].[appi].["screenshots"] (
+      url = screenshot
+      w = url.imageinfo("width")
+      h = url.imageinfo("height")
+      offset = w * ( 175 / h ) / 2 + 5
+      change_x offset
+      
+      image url null 175
+      
+      scale = 175 / h
+      square w * scale 175 0 1
+      if mouse_touching (
+        cursor "pointer"
+        if click (
+          viewing_url = url
+        )
+      )
+      
+      change_x offset
+      total_x += offset * 2
+      scale = 175 / h
+    )
+    frame "clear"
+    
+    ss_scrollamt = total_x - ( frame_w * 2 )
+    
+    scroll_y = sv_scroll_y
+    goto sx sy
     
     offsetx = win_width * -.75 * .5 + 30
     text apps.["apps"].[appi].["path"].join(" -> ") 7.5 : chy#105 c#fff chx#offsetx chy#10
@@ -243,7 +303,8 @@ mainloop:
       cursor "pointer"
       if click (
         if saved.contains(appname) (
-          saved.delete(saved.index(appaname))
+          i = saved.index(appname)
+          saved.delete(i)
         ) else (
           saved.append(appname)
         )
@@ -277,7 +338,7 @@ mainloop:
       codeurl = url_back ++ code ++ ".osl"
       
       dx = -2
-      temp = appi + 1 / 2
+      temp = appi / 2
       if appi / 2 == temp.round (
         dx = 2
       )
@@ -327,14 +388,15 @@ mainloop:
       if mouse_touching (
         if click (
           if saved.contains(name) (
-            saved.delete(saved.index(name))
+            i = saved.index(name)
+            saved.delete(i)
           ) else (
             saved.append(name)
           )
         )
       )
       
-      if appi + 1 / 2 == temp.round (
+      if appi / 2 == temp.round (
         panel_y += 200
       )
     )
@@ -353,4 +415,12 @@ mainloop:
   if scroll_y < 0 (
     scroll_y = 0
   )
+  
+  if viewing_url != "" (
+    url = viewing_url
+    w = url.imageinfo("width")
+    h = url.imageinfo("height")
+    image url
+  )
+  
 winbuttons
