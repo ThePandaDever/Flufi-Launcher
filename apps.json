@@ -48,6 +48,16 @@
         "files": {
             "main":"launcher"
         }
+    },
+    {
+        "name":"test",
+        "disp":"Test thingy",
+        "desc":["testing"],
+        "path":["Misc"],
+        "status":"WIP",
+        "banner":"",
+        "files": {
+        }
     }
   ]
 }
