@@ -3,7 +3,7 @@
     {
       "name": "factorio",
       "disp": "Factorio",
-      "desc":["This is a (almost) full recreation of Factorio by Wube Software.\n\n",{"link":"https://store.steampowered.com/app/427520/Factorio/","disp":"Factorio - Steam"}],
+      "desc":["This is a (almost) full recreation of Factorio by Wube Software.\n\n",{"link":"https://store.steampowered.com/widget/427520/","disp":"Factorio - Steam"}],
       "path": ["Games","Simulation"],
       "status": "WIP-BROKEN",
       "banner":"c #bf6d24 w 4 cutcircle 0 0 5.5 0 180 w 1 line -2 7 -1.5 9 cont 1.5 9 cont 2 7 line -2 -7 -1.5 -9 cont 1.5 -9 cont 2 -7 line 7 -2 9 -1.5 cont 9 1.5 cont 7 2 line -7 -2 -9 -1.5 cont -9 1.5 cont -7 2 line -5.5 3 -7.5 6 cont -6 7.5 cont -3 5.5 line 5.5 3 7.5 6 cont 6 7.5 cont 3 5.5 line -5.5 -3 -7.5 -6 cont -6 -7.5 cont -3 -5.5 line 5.5 -3 7.5 -6 cont 6 -7.5 cont 3 -5.5 w 3 dot 0 8 dot 8 0 dot 0 -8 dot -8 0 dot -6 -6 dot 6 -6 dot -6 6 dot 6 6 w 2 line -25 -25 -25 -15 line -25 -15 -22 -15 line -28 -19 -22 -19 line -18 -25 -15 -15 cont -12 -25 line -19 -21 -11 -21 line -6 -15 -8 -15 cont -8 -25 cont -6 -25 line -3 -15 3 -15 line 0 -16 0 -25 line 6 -15 10 -15 cont 10 -25 cont 6 -25 cont 6 -15 line 13 -25 13 -15 cont 15 -15 line 18 -25 21 -25 line 18 -15 21 -15 line 19.5 -15 19.5 -25 line 24 -15 28 -15 cont 28 -25 cont 24 -25 cont 24 -15",
