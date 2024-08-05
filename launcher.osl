@@ -2,11 +2,17 @@ import "Window_Tools"
 
 icon_launcher = "w 4 c #ae00ff square 0 -6 2 2 w 2 c #e8b8ff line -5 4 -3 -1 line 0 4 0 -1 line 5 4 3 -1 w 2 c #7000a3 square 0 -6 4 4 w 4 c #ae00ff dot -5 4 dot 0 4 dot 5 4"
 icon_home = "w 3 line 8 0 5 0 cont 5 -8 cont -5 -8 cont -5 0 cont -8 0 cont 0 8 cont 8 0 w 10 line 0 -3 0 3"
-file "open" my_uuid
-file "set" 11 icon_launcher
 
-permission "request" "save admin"
+icon_hl2 = "c #444444 w 17 dot -1.5 0 w 7 dot 6.5 5 line 6.5 5 -.5 5 line 6.5 5 3.5 -1.4 c #ff9900 w 13 dot -1.5 0 w .7 cutcircle 7 5.9 1 3.5 90 cont 6 3.5 cont 8 3.5 c #444444 w 1.5 line -4 4 -2 4 cont 1 -3 cont 2 -2.5 line -1.5 1.5 -4 -3"
+
+file "open" my_uuid
+name = file[2]
+file "set" 11 icon_launcher
+file "close"
+
+//permission "request" "save admin"
 permission "request" "notifications"
+permission "request" "file editor"
 
 window "dimensions" 1000 600
 minimised_text = "Epic"
@@ -25,7 +31,27 @@ if save_data == false (
   save "settings.cfg" "set" {"saved":[]}
 )
 save "settings.cfg" "get"
-saved = save_data.["saved"]
+if "saved" in save_data (
+  saved = save_data.["saved"]
+)
+
+file "open" window.file.uuid
+name = file.[2]
+file "set" 11 icon_launcher
+file "close"
+
+def "cust_notif" "text,icon,label"
+  file "open" window.file.uuid
+  file "set" 11 icon.str
+  file "set" 2 label.str
+  notify text
+  file "set" 11 icon_launcher
+  file "set" 2 "launcher"
+endef
+
+cust_notif "i was crazy once" icon_hl2 "crazy?"
+
+//the thing was, when i was testing on school pc, adding this fully crashed origin :skull:
 
 def "winbuttons"
   window "show"
@@ -61,6 +87,7 @@ def "app_panel" "dx,cy,text"
   h = 200 - 30
   square w h 10 : c#444
   square w - 10 h - 40 10 : c#222 chy#15
+  p_touch = mouse_touching
   goto w * -.5 + x + 2 h * -.5 + y + 12 + scroll_y
   text text 10 : c#fff
 endef
@@ -115,7 +142,7 @@ def "topbar"
   )
 endef
 
-method "value.putnewline(every)"
+def "value.putnewline(every)"
   count = 0
   loop value.len // every (
     count ++
@@ -123,18 +150,18 @@ method "value.putnewline(every)"
     value.insert(index,newline)
   )
   return value
-endmethod
+endef
 
 
 out = 0
 
-method "name.getappi()"
+def "name.getappi()"
   return apps.["apps"].getall("name").index(name)
-endmethod
+endef
 
-method "text.wrap(limit)"
+def "text.wrap(limit)"
   outtext = ""
-  each "chari" "char" text.split("") (
+  each chari char text (
     outtext = outtext ++ char
     temp = chari / limit
     if temp == temp.round (
@@ -142,14 +169,90 @@ method "text.wrap(limit)"
     )
   )
   return outtext
-endmethod
+endef
 
-// explain what the func does
-// in my array of apps, it gets the index of the app by the name
-// so like "factorio" would return 1
+def "drawhomeapp" "appjson"
+  code = appjson.["files"].["main"]
+  codeurl = url_back ++ code ++ ".osl"
+  dx = -2
+  
+  temp = appi / 2
+  if temp == temp.round (
+    dx = 2
+  )
+
+  app_panel dx panel_y appjson.["disp"]
+  if p_touch or mouse_touching (
+    cursor "pointer"
+    if click (
+      menu = "app"
+      menu_app = appjson.["name"]
+    )
+  )
+  screen_goto dx panel_y - 30
+  icon appjson.["banner"] 2.5
+  
+  screen_goto dx panel_y
+  change_x w * .5 - 15
+  change_y h * -.5 + 12
+  
+  square 17 17 10 : c#222
+  icon "open" .8 : hover_size#1.1 c#fff tooltip#"View app"
+  
+  if mouse_touching (
+    cursor "pointer"
+    if click (
+      menu = "app"
+      menu_app = appjson.["name"]
+    )
+  )
+  
+  change_x -35
+  
+  square 17 17 10 : c#222
+  icon "copy" .8 : hover_size#1.1 c#fff tooltip#"Share app"
+  
+  if mouse_touching (
+    cursor "pointer"
+    if click (
+      inv = "## Flufi launcher app:" ++ newline ++ "**" ++ appjson.["name"] ++ "**"
+      clipboard "set" inv.destr
+    )
+  )
+  
+  change_x -35
+  
+  square 17 17 10 : c#222
+  iconname = "bookmark"
+  name = appjson.["name"]
+  if saved.contains(name) (
+    iconname = "bookmark-full"
+  )
+  icon iconname .8 : hover_size#1.1 c#fff tooltip#"Save"
+  
+  if mouse_touching (
+    if click (
+      if saved.contains(name) (
+         i = saved.index(name)
+        saved.delete(i)
+      ) else (
+        saved.append(name)
+      )
+    )
+  )
+  temp = appi / 2
+  if temp == temp.round (
+    panel_y += 200
+  )
+endef
+
+def "menu_update"
+  scroll_y = 0
+endef
 
 window "set_dragbox" [[2,2,0,0],[-2,2,-180,-40]]
 
+old_menu = ""
 menu = "home"
 menu_app = ""
 
@@ -160,14 +263,26 @@ ss_scrollamt = 0
 ss_scrollcur = 0
 
 viewing_url = ""
+last_viewing_url = ""
+viewing_scale = 1
+
+embed_url = ""
+last_embed_url = ""
+embed_y = 0
 
 mainloop:
   pen "size" 5
   panel_y = 0
   
   caninteract = viewing_url == ""
-  click = lastmousedown and mouse_down and caninteract
+  rawclick = lastmousedown and mouse_down
+  click = rawclick and caninteract
   lastmousedown = mouse_down.not
+  
+  if old_menu != menu (
+    old_menu = menu
+    menu_update
+  )
   
   if menu == "app" (
     appi = menu_app.getappi()
@@ -199,11 +314,12 @@ mainloop:
       square w - 20 10 10 : c#777
       slider w - 20 10 screenshots
       sliderval = slider_screenshots
-      ss_scrollcur = sliderval * ss_scrollamt
     ) else (
       ss_scrollcur = 0
       slider_screenshots = 0
+      sliderval = 0
     )
+    ss_scrollcur = sliderval * ss_scrollamt
     
     change_y 115
     sv_scroll_y = scroll_y
@@ -216,21 +332,22 @@ mainloop:
     change_x ss_scrollcur * -1
     change_x w * -.5
     total_x = 0
-    each "screenshoti" "screenshot" apps.["apps"].[appi].["screenshots"] (
-      url = screenshot
+    each screenshoti screenshot apps.["apps"].[appi].["screenshots"] (
+      url = apps.["apps"].[appi].["screenshots"].[screenshoti]
       w = url.imageinfo("width")
       h = url.imageinfo("height")
       offset = w * ( 175 / h ) / 2 + 5
       change_x offset
       
-      image url null 175
+      image url.str null 175
       
       scale = 175 / h
-      square w * scale 175 0 1
+      square w * scale 175 0 0 1
       if mouse_touching (
         cursor "pointer"
         if click (
           viewing_url = url
+          viewing_scale = 1
         )
       )
       
@@ -260,10 +377,10 @@ mainloop:
     sections = apps.["apps"].[appi].["desc"]
     sectiony = 0
     wrapamt = w * .1
-    wrapamt = wrapamt.round - 1
+    wrapamt = wrapamt.round - 2
     x = x_position - 5
     y = y_position
-    each "sectioni" "section" sections (
+    each sectioni section sections (
       goto x y
       offsety = sectiony * -6
       sec_text = section
@@ -274,7 +391,18 @@ mainloop:
           c #2491ff
         )
       )
-      text sec_text.wrap(wrapamt) 10 : chx#offsetx chy#offsety chy#140
+      text sec_text.wrapText(wrapamt) 10 : chx#offsetx chy#offsety chy#140
+      if section.istype("object") (
+        if section.contains("link") (
+          if mouse_touching (
+            cursor "pointer"
+            log click
+            if click (
+              http "newtab" section.["link"]
+            )
+          )
+        )
+      )
       sectiony += section.count(newline) + 1 * 10
     )
     
@@ -331,96 +459,79 @@ mainloop:
       text txt 12
     )
     
-    appi = 0
-    each "tempappi" "appjson" apps.destr.["apps"] (
-      appi ++
-      code = appjson.["files"].["main"]
-      codeurl = url_back ++ code ++ ".osl"
+    if saved.len > 0 (
+      screen_goto -1 170
+      change_x 20
+      text "Saved" 13
       
-      dx = -2
-      temp = appi / 2
-      if appi / 2 == temp.round (
-        dx = 2
-      )
-    
-      app_panel dx panel_y appjson.["disp"]
-      screen_goto dx panel_y - 30
-      icon appjson.["banner"] 2.5
+      panel_y += 40
       
-      screen_goto dx panel_y
-      change_x w * .5 - 15
-      change_y h * -.5 + 12
-      
-      square 17 17 10 : c#222
-      icon "open" .8 : hover_size#1.1 c#fff tooltip#"View app"
-      
-      if mouse_touching (
-        cursor "pointer"
-        if click (
-          menu = "app"
-          menu_app = appjson.["name"]
+      appi = 0
+      each tempappi appjson apps.["apps"] (
+        appjson = apps.["apps"].[tempappi]
+        if appjson.["name"] in saved (
+          appi ++
+          drawhomeapp appjson
         )
       )
-      
-      change_x -35
-      
-      square 17 17 10 : c#222
-      icon "copy" .8 : hover_size#1.1 c#fff tooltip#"Share app"
-      
-      if mouse_touching (
-        cursor "pointer"
-        if click (
-          inv = "## Flufi launcher app:" ++ newline ++ "**" ++ appjson.["name"] ++ "**"
-          clipboard "set" inv.destr
-        )
-      )
-      
-      change_x -35
-      
-      square 17 17 10 : c#222
-      iconname = "bookmark"
-      name = appjson.["name"]
-      if saved.contains(name) (
-        iconname = "bookmark-full"
-      )
-      icon iconname .8 : hover_size#1.1 c#fff tooltip#"Save"
-      
-      if mouse_touching (
-        if click (
-          if saved.contains(name) (
-            i = saved.index(name)
-            saved.delete(i)
-          ) else (
-            saved.append(name)
-          )
-        )
-      )
-      
-      if appi / 2 == temp.round (
+      if temp % 1 == .5 (
         panel_y += 200
       )
+    
+      panel_y += 15
+    )
+    screen_goto -1 panel_y - 70
+    change_x 20
+    text "Featured" 13
+    
+    panel_y += 40
+    
+    appi = 0
+    each tempappi appjson apps.destr.["apps"] (
+      appi ++
+      appjson = apps.["apps"].[tempappi]
+      drawhomeapp appjson
+    )
+    if temp % 1 == .5 (
+      panel_y += 200
     )
   )
   
   topbar
   
   //scrolling
-  scroll_y += scroll_velocity * -.1
-  max = panel_y
-  win_max = window_height - 35
-  max = max - win_max
-  if scroll_y > max (
-    scroll_y = max
-  )
-  if scroll_y < 0 (
-    scroll_y = 0
+  if caninteract (
+    scroll_y += scroll_velocity * -.1
+    max = panel_y
+    win_max = window_height - 35
+    max = max - win_max
+    if scroll_y > max (
+      scroll_y = max
+    )
+    if scroll_y < 0 (
+      scroll_y = 0
+    )
   )
   
   if viewing_url != "" (
     url = viewing_url
-    w = url.imageinfo("width")
-    h = url.imageinfo("height")
-    image url
+    w = url.imageinfo("width") * viewing_scale
+    h = url.imageinfo("height") * viewing_scale
+    goto 0 0
+    pen "size" 100000
+    c #000
+    pen "opacity" 50
+    pen "down"
+    pen "up"
+    log viewing_scale
+    image url w * viewing_scale
+    square w * viewing_scale h * viewing_scale 1 0 1
+    if mouse_touching.not and rawclick and last_viewing_url != "" (
+      viewing_url = ""
+    )
+    if scroll_velocity.str != "scroll_velocity" (
+      viewing_scale *= scroll_velocity * .000025 + 1
+    )
   )
-  
+  last_viewing_url = viewing_url
 winbuttons
